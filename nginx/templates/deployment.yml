@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+  namespace:  {{ .Chart.Name }}-{{ .Release.Revision }}
+  labels:
+    app: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      volumes:
+        - name: nginx-pv-storage
+          persistentVolumeClaim:
+            claimName: nginx-pv-claim
+        - name: config
+          configMap:
+            name: appsettings
+            items:
+            - key: "user.properties"
+              path: "user.properties"
+            - key: "accesspolicy.properties"
+              path: "accesspolicy.properties"
+        - name: secret-volume
+          secret:
+            secretName: nginx-secret
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+          name: http-app
+        env:
+          - name: APP_ADMIN
+            valueFrom:
+              configMapKeyRef:
+                name: appsettings
+                key: logging_enabled
+          - name: SETTINGS_PROPERTIES_FILENAME
+            valueFrom:
+              configMapKeyRef:
+                name: appsettings
+                key: settings_properties_filename
+        volumeMounts:
+          - name: nginx-pv-storage
+            mountPath: "/usr/share/nginx/html"
+          - name: config
+            mountPath: "/config"
+            readOnly: true
+          - name: secret-volume
+            mountPath: "etc/secret-volume"
+            readOnly: true
