@@ -1,0 +1,15 @@
+settings_properties_filename: "settings.properties"
+require_windows_authentication: "true"
+usertype:
+  - "admin"
+  - "owner"
+  - "developer"
+  - "stakeholder"
+accesspolicy:
+  - "api"
+  - "apikey"
+  - "system"
+environment:
+  - "prd"
+  - "dev"
+  - "qa"
